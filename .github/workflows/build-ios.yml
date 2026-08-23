@@ -28,20 +28,34 @@ jobs:
           npx cap sync ios
 
       # ── Patch Podfile to disable code signing for Pod targets ──
+      # Capacitor already adds a post_install block; we inject into it rather
+      # than appending a second one (CocoaPods forbids multiple hooks).
       - name: Patch Podfile
         run: |
-          cat >> ios/App/Podfile << 'PODEOF'
+          ruby << 'RUBY_SCRIPT'
+          podfile_path = 'ios/App/Podfile'
+          content = File.read(podfile_path)
 
-          post_install do |installer|
-            installer.pods_project.targets.each do |target|
-              target.build_configurations.each do |config|
-                config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
-                config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
-                config.build_settings['EXPANDED_CODE_SIGN_IDENTITY'] = ''
+          signing_snippet = <<~SNIPPET
+              installer.pods_project.targets.each do |target|
+                target.build_configurations.each do |config|
+                  config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+                  config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
+                  config.build_settings['EXPANDED_CODE_SIGN_IDENTITY'] = ''
+                end
               end
-            end
+          SNIPPET
+
+          if content.match?(/^post_install/)
+            # Inject our snippet right after the opening line of the existing hook
+            content.sub!(/^(post_install do \|installer\|)/, "\\1\n#{signing_snippet}")
+          else
+            # No hook yet — append one
+            content += "\npost_install do |installer|\n#{signing_snippet}end\n"
           end
-          PODEOF
+
+          File.write(podfile_path, content)
+          RUBY_SCRIPT
           cd ios/App && pod install
 
       # ── Import Distribution certificate ──
