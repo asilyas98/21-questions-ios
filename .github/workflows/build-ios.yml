@@ -151,6 +151,6 @@ jobs:
           xcrun altool --upload-app \
             --type ios \
             --file "$(ls $RUNNER_TEMP/ipa/*.ipa)" \
-            --apple-id "$APPLE_ID" \
-            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-            --team-id "$APPLE_TEAM_ID"
+            --username "$APPLE_ID" \
+            --app-password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --provider-public-id "$APPLE_TEAM_ID"
