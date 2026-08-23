@@ -133,10 +133,24 @@ jobs:
             -exportPath $RUNNER_TEMP/ipa \
             -exportOptionsPlist $RUNNER_TEMP/export_options.plist
 
-      # ── Upload .ipa to GitHub so you can download it ──
+      # ── Upload .ipa to GitHub (backup copy) ──
       - name: Upload .ipa artifact
         uses: actions/upload-artifact@v4
         with:
           name: 21-questions-ios
           path: ${{ runner.temp }}/ipa/*.ipa
           retention-days: 30
+
+      # ── Push to App Store Connect ──
+      - name: Upload to App Store Connect
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$(ls $RUNNER_TEMP/ipa/*.ipa)" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID"
