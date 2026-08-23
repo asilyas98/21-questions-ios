@@ -1,0 +1,15 @@
+{
+  "appId": "com.simpleai.21questions",
+  "appName": "21 Questions",
+  "webDir": "www",
+  "server": {
+    "allowNavigation": [
+      "*.peerjs.com"
+    ]
+  },
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#0d0b1e",
+    "preferredContentMode": "mobile"
+  }
+}

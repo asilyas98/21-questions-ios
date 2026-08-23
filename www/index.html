@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>21 Questions 🎯</title>
+<script src="peerjs.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  --bg:#0d0b1e;
+  --card:rgba(255,255,255,0.06);
+  --border:rgba(255,255,255,0.11);
+  --accent:#f59e0b;
+  --purple:#8b5cf6;
+  --teal:#06b6d4;
+  --green:#10b981;
+  --red:#ef4444;
+  --text:#f1f5f9;
+  --dim:#94a3b8;
+  --r:16px;
+}
+
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:radial-gradient(ellipse at top left,#1a1040 0%,#0d0b1e 50%,#0b1a2e 100%);
+  min-height:100vh;color:var(--text);overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    radial-gradient(1px 1px at 15% 25%,rgba(255,255,255,.35) 0%,transparent 100%),
+    radial-gradient(1px 1px at 85% 12%,rgba(255,255,255,.25) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 45% 75%,rgba(255,255,255,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 70% 40%,rgba(255,255,255,.2) 0%,transparent 100%),
+    radial-gradient(1px 1px at 5% 65%,rgba(255,255,255,.25) 0%,transparent 100%),
+    radial-gradient(1px 1px at 92% 80%,rgba(255,255,255,.2) 0%,transparent 100%);
+  pointer-events:none;z-index:0;
+}
+
+.app{
+  position:relative;z-index:1;
+  max-width:580px;margin:0 auto;
+  padding:16px 16px 32px;
+  min-height:100vh;display:flex;flex-direction:column;
+}
+
+.screen{display:none;flex-direction:column;flex:1;animation:fadeUp .35s ease;}
+.screen.active{display:flex;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── Cards ── */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:20px;
+  backdrop-filter:blur(12px);margin-bottom:14px;
+}
+
+/* ── Buttons ── */
+.btn{
+  padding:12px 22px;border:none;border-radius:12px;
+  font-size:15px;font-weight:600;cursor:pointer;
+  transition:all .18s ease;font-family:inherit;
+}
+.btn:active{transform:scale(.96);}
+.btn-primary{background:linear-gradient(135deg,#f59e0b,#d97706);color:#111;}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-secondary{background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{background:rgba(255,255,255,.13);}
+.btn-teal{background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;}
+.btn-purple{background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;}
+.btn-w{width:100%;margin-top:8px;}
+
+/* ── Exit/leave button ── */
+.exit-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:7px 12px;border:1px solid rgba(239,68,68,.25);
+  background:rgba(239,68,68,.08);border-radius:9px;
+  color:#f87171;font-size:13px;font-weight:600;cursor:pointer;
+  transition:all .18s;
+}
+.exit-btn:hover{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.45);}
+
+/* ── Inputs ── */
+input[type=text],select{
+  width:100%;padding:12px 15px;
+  background:rgba(255,255,255,.07);
+  border:1px solid var(--border);
+  border-radius:11px;color:var(--text);
+  font-size:15px;font-family:inherit;outline:none;
+  transition:border-color .2s;
+}
+input[type=text]:focus,select:focus{border-color:var(--accent);}
+input[type=text]::placeholder{color:var(--dim);}
+select option{background:#1e1b4b;color:var(--text);}
+
+/* ── Welcome ── */
+.logo{
+  font-size:clamp(52px,14vw,88px);font-weight:900;text-align:center;
+  background:linear-gradient(135deg,#f59e0b 0%,#8b5cf6 50%,#06b6d4 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1;filter:drop-shadow(0 0 40px rgba(139,92,246,.3));
+}
+
+/* ── Mode cards ── */
+.mode-card{
+  display:flex;align-items:center;gap:16px;
+  padding:16px 18px;border-radius:14px;
+  border:1px solid var(--border);
+  background:var(--card);cursor:pointer;
+  transition:all .2s;margin-bottom:10px;
+}
+.mode-card:hover{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.1);transform:translateY(-1px);}
+.mode-icon{font-size:32px;flex-shrink:0;}
+.mode-title{font-weight:700;font-size:16px;}
+.mode-sub{font-size:12px;color:var(--dim);}
+.mode-arrow{margin-left:auto;color:var(--dim);font-size:20px;}
+
+/* ── Room code display ── */
+.room-code-big{
+  font-family:'Courier New',monospace;
+  font-size:clamp(32px,10vw,52px);font-weight:900;
+  letter-spacing:.2em;text-align:center;
+  background:linear-gradient(135deg,var(--accent),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  padding:16px 20px;
+  background-clip:text;
+}
+.room-code-card{
+  background:rgba(245,158,11,.07);
+  border:2px solid rgba(245,158,11,.25);
+  border-radius:16px;text-align:center;margin-bottom:16px;
+}
+
+/* ── Divider ── */
+.divider{
+  display:flex;align-items:center;gap:12px;
+  color:var(--dim);font-size:12px;margin:8px 0;
+}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── Player rows ── */
+.player-list{display:flex;flex-direction:column;gap:8px;margin:10px 0;}
+.player-row{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 13px;background:rgba(255,255,255,.05);
+  border-radius:10px;font-size:14px;
+  border:2px solid transparent;transition:all .2s;
+}
+.player-row.is-keeper{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.4);}
+.avatar{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;flex-shrink:0;
+}
+.av0{background:#ef4444;color:#fff;} .av1{background:#f59e0b;color:#111;}
+.av2{background:#10b981;color:#fff;} .av3{background:#3b82f6;color:#fff;}
+.av4{background:#8b5cf6;color:#fff;} .av5{background:#ec4899;color:#fff;}
+.av6{background:#06b6d4;color:#fff;} .av7{background:#84cc16;color:#111;}
+.av8{background:#f97316;color:#fff;} .av9{background:#a855f7;color:#fff;}
+
+.crown-btn{
+  margin-left:auto;background:none;border:none;
+  font-size:17px;cursor:pointer;padding:4px 6px;
+  border-radius:7px;opacity:.35;transition:opacity .15s,transform .15s;line-height:1;
+}
+.crown-btn:hover{opacity:.8;transform:scale(1.15);}
+.player-row.is-keeper .crown-btn{opacity:1;}
+.rm-btn{
+  background:none;border:none;color:var(--dim);cursor:pointer;
+  font-size:18px;padding:3px 6px;border-radius:6px;transition:color .15s;line-height:1;
+}
+.rm-btn:hover{color:var(--red);}
+
+/* ── Keeper hint ── */
+.keeper-hint{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;
+  background:rgba(245,158,11,.07);border:1px dashed rgba(245,158,11,.3);
+  border-radius:10px;font-size:13px;color:var(--dim);margin-bottom:10px;
+}
+
+/* ── Game header ── */
+.game-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.q-counter{
+  font-size:clamp(26px,7vw,38px);font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;
+}
+
+.progress-bar{width:100%;height:7px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;margin-bottom:14px;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--purple));border-radius:4px;transition:width .5s ease;}
+
+.turn-chip{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 14px;
+  background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);
+  border-radius:10px;margin-bottom:12px;font-size:14px;
+}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;animation:pulse 1.6s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.75);}}
+
+/* ── Status banners ── */
+.status-banner{
+  padding:12px 16px;border-radius:12px;
+  margin-bottom:12px;font-size:14px;font-weight:500;
+  display:flex;align-items:center;gap:10px;
+}
+.status-answering{background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.25);color:#a78bfa;}
+.status-waiting-host{background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.2);color:#67e8f9;}
+
+/* ── Q&A list ── */
+.qa-scroll{
+  max-height:260px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:9px;
+  margin-bottom:14px;padding-right:2px;
+}
+.qa-scroll::-webkit-scrollbar{width:4px;}
+.qa-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px;}
+
+.qa-item{
+  padding:11px 14px;border-radius:12px;
+  background:rgba(255,255,255,.045);border-left:3px solid;
+  font-size:13px;animation:fadeUp .25s ease;
+}
+.qa-meta{font-size:11px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;}
+.qa-q{margin-bottom:5px;line-height:1.45;}
+.qa-a{font-weight:700;font-size:13px;}
+.qa-item.yes{border-color:var(--green);} .qa-item.yes .qa-a{color:var(--green);}
+.qa-item.no{border-color:var(--red);}   .qa-item.no .qa-a{color:var(--red);}
+.qa-item.maybe{border-color:var(--accent);} .qa-item.maybe .qa-a{color:var(--accent);}
+.qa-item.sometimes{border-color:var(--purple);} .qa-item.sometimes .qa-a{color:#a78bfa;}
+
+/* ── Guess banner ── */
+.guess-banner{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 18px;
+  background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(6,182,212,.1));
+  border:1px solid rgba(16,185,129,.35);border-radius:14px;
+  margin-bottom:12px;cursor:pointer;transition:all .2s;
+}
+.guess-banner:hover{background:linear-gradient(135deg,rgba(16,185,129,.25),rgba(6,182,212,.18));border-color:rgba(16,185,129,.6);transform:translateY(-1px);}
+.guess-banner-icon{font-size:26px;flex-shrink:0;}
+.guess-banner-text{flex:1;}
+.guess-banner-title{font-weight:700;font-size:15px;color:#34d399;}
+.guess-banner-sub{font-size:12px;color:var(--dim);}
+.guess-banner-arrow{font-size:18px;color:#34d399;opacity:.7;}
+
+/* ── Verbal link ── */
+.verbal-link{
+  display:flex;align-items:center;gap:7px;
+  margin-top:10px;padding:9px 12px;
+  border-radius:9px;font-size:13px;font-weight:500;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  cursor:pointer;color:var(--dim);transition:all .18s;
+}
+.verbal-link:hover{background:rgba(255,255,255,.08);color:var(--text);border-color:rgba(255,255,255,.15);}
+
+/* ── Secret reveal ── */
+.secret-box{
+  cursor:pointer;padding:36px 24px;border-radius:18px;
+  background:rgba(245,158,11,.08);border:2px dashed rgba(245,158,11,.35);
+  text-align:center;transition:all .25s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;min-height:140px;margin:16px 0;
+}
+.secret-box:hover{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.6);}
+.secret-text-big{font-size:clamp(22px,6vw,34px);font-weight:900;color:var(--accent);}
+
+/* ── Answer buttons ── */
+.answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:14px 0;}
+.ans-btn{
+  padding:18px 10px;border:none;border-radius:15px;
+  font-size:16px;font-weight:700;cursor:pointer;
+  transition:all .18s;font-family:inherit;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+}
+.ans-btn .em{font-size:26px;}
+.ans-btn:hover{filter:brightness(1.12);transform:translateY(-2px);}
+.ans-btn:active{transform:scale(.96);}
+.ans-yes{background:linear-gradient(135deg,#10b981,#059669);color:#fff;}
+.ans-no{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;}
+.ans-maybe{background:linear-gradient(135deg,#f59e0b,#d97706);color:#111;}
+.ans-sometimes{background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;}
+
+.ans-guess-link{
+  text-align:center;margin-top:6px;padding:10px;
+  border-radius:10px;background:rgba(16,185,129,.08);
+  border:1px solid rgba(16,185,129,.2);cursor:pointer;
+  color:#34d399;font-size:13px;font-weight:600;transition:all .18s;
+}
+.ans-guess-link:hover{background:rgba(16,185,129,.18);}
+
+/* ── Overlays ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:60;display:none;align-items:center;justify-content:center;padding:20px;}
+.overlay.show{display:flex;animation:fadeUp .2s ease;}
+.ov-card{
+  background:#12102e;border:1px solid rgba(255,255,255,.13);
+  border-radius:20px;padding:26px;width:100%;max-width:420px;
+  animation:slideUp .28s ease;
+}
+@keyframes slideUp{from{transform:translateY(18px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+/* ── Result ── */
+.result-icon{font-size:76px;text-align:center;margin:12px 0;}
+.result-title{font-size:clamp(28px,8vw,40px);font-weight:900;text-align:center;margin-bottom:6px;}
+.object-box{text-align:center;padding:18px;background:rgba(245,158,11,.09);border-radius:14px;margin:14px 0;}
+.object-box-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+.object-box-val{font-size:clamp(22px,6vw,30px);font-weight:900;color:var(--accent);}
+.stats-row{display:flex;justify-content:space-around;text-align:center;margin-top:10px;}
+.stat-val{font-size:26px;font-weight:800;color:var(--accent);}
+.stat-lbl{font-size:11px;color:var(--dim);}
+
+/* ── Confetti ── */
+.confetti-wrap{position:fixed;inset:0;pointer-events:none;z-index:100;}
+.cp{position:absolute;animation:fall linear forwards;}
+@keyframes fall{0%{transform:translateY(-60px) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(700deg);opacity:0;}}
+
+/* ── Spinner ── */
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin{animation:spin 2s linear infinite;display:inline-block;}
+
+/* ── Connection badge ── */
+.conn-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;
+}
+.conn-online{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);color:#34d399;}
+.conn-offline{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#f87171;}
+
+/* ── Util ── */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.chip-keeper{background:rgba(139,92,246,.18);border:1px solid rgba(139,92,246,.35);color:#a78bfa;}
+.lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);margin-bottom:7px;}
+.inrow{display:flex;gap:8px;} .inrow input{flex:1;}
+.spacer{flex:1;}
+.tc{text-align:center;}
+.dim{color:var(--dim);font-size:13px;line-height:1.6;}
+.mt8{margin-top:8px;} .mt16{margin-top:16px;}
+.err-msg{padding:10px 13px;border-radius:9px;background:rgba(239,68,68,.12);color:#f87171;font-size:13px;text-align:center;margin:8px 0;display:none;}
+</style>
+</head>
+<body>
+
+<div class="confetti-wrap" id="confettiWrap"></div>
+
+<div class="app">
+
+<!-- ══════════════════════════════════════════
+     SCREEN: Welcome
+══════════════════════════════════════════ -->
+<div class="screen active" id="screen-welcome">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px 0;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-size:60px;margin-bottom:12px;">🎯</div>
+      <div class="logo">21<br>Questions</div>
+      <p class="dim" style="margin-top:12px;">Mystery. Deduction. Glory.</p>
+    </div>
+
+    <div class="mode-card" onclick="goSetup()">
+      <div class="mode-icon">📱</div>
+      <div>
+        <div class="mode-title">Pass &amp; Play</div>
+        <div class="mode-sub">Everyone shares one device, take turns asking</div>
+      </div>
+      <div class="mode-arrow">›</div>
+    </div>
+
+    <div class="divider">or play online</div>
+
+    <div class="mode-card" onclick="showScreen('host-setup')" style="border-color:rgba(139,92,246,.3);">
+      <div class="mode-icon">🏠</div>
+      <div>
+        <div class="mode-title">Host a Game</div>
+        <div class="mode-sub">Create a room — friends join on their own devices</div>
+      </div>
+      <div class="mode-arrow" style="color:#a78bfa;">›</div>
+    </div>
+
+    <div class="mode-card" onclick="showScreen('join')" style="border-color:rgba(6,182,212,.3);">
+      <div class="mode-icon">🚀</div>
+      <div>
+        <div class="mode-title">Join a Game</div>
+        <div class="mode-sub">Enter a room code to connect with the host</div>
+      </div>
+      <div class="mode-arrow" style="color:#67e8f9;">›</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: Local Setup
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-setup">
+  <div style="margin-bottom:20px;">
+    <h1 style="font-size:24px;font-weight:800;margin-bottom:4px;">Who's Playing?</h1>
+    <p class="dim">Add everyone, then crown one player as the Keeper.</p>
+  </div>
+
+  <div class="card">
+    <div class="lbl">Add Player</div>
+    <div class="inrow">
+      <input type="text" id="nameInput" placeholder="Enter name…" maxlength="20"
+             onkeydown="if(event.key==='Enter')addPlayer()">
+      <button class="btn btn-primary" onclick="addPlayer()">Add</button>
+    </div>
+  </div>
+
+  <div id="playersSection" style="display:none;">
+    <div class="keeper-hint"><span>👑</span><span id="keeperHintText">Tap the crown to make someone the Keeper</span></div>
+    <div class="player-list" id="playerList"></div>
+  </div>
+
+  <div id="setupErr" class="err-msg">Need at least 2 players to start!</div>
+  <div id="keeperErr" class="err-msg">Pick a Keeper first — tap the 👑 next to their name!</div>
+
+  <div class="spacer"></div>
+  <button class="btn btn-primary btn-w" onclick="startLocalGame()">▶ Start Game</button>
+  <button class="btn btn-secondary btn-w" onclick="showScreen('welcome')">← Back</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: Host Setup (Online)
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-host-setup">
+  <div style="margin-bottom:24px;">
+    <div style="font-size:40px;margin-bottom:10px;">🏠</div>
+    <h1 style="font-size:22px;font-weight:800;">Host a Game</h1>
+    <p class="dim mt8">You'll be the <strong style="color:var(--accent);">Keeper</strong> — you'll see the secret object and answer everyone's questions.</p>
+  </div>
+
+  <div class="card">
+    <div class="lbl">Your Name</div>
+    <input type="text" id="hostNameInput" placeholder="Enter your name…" maxlength="20"
+           onkeydown="if(event.key==='Enter')hostCreate()">
+  </div>
+
+  <div id="hostSetupErr" class="err-msg">Enter your name first!</div>
+  <div id="hostConnErr" class="err-msg">Could not create room — check your connection and try again.</div>
+
+  <div class="spacer"></div>
+  <button class="btn btn-purple btn-w" style="margin-top:0;" onclick="hostCreate()">
+    🎮 Create Room
+  </button>
+  <button class="btn btn-secondary btn-w" onclick="showScreen('welcome')">← Back</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: Lobby (host waits for players)
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-lobby">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <div>
+      <h1 style="font-size:20px;font-weight:800;">Room Open</h1>
+      <div id="lobbyConnStatus" class="conn-badge conn-online" style="margin-top:4px;">● Connected</div>
+    </div>
+    <button class="exit-btn" onclick="confirmExit()">✕ Close Room</button>
+  </div>
+
+  <p class="dim" style="margin-bottom:10px;font-size:13px;">Share this code with everyone who wants to play:</p>
+  <div class="room-code-card">
+    <div class="room-code-big" id="lobbyCode">------</div>
+    <div style="padding-bottom:14px;">
+      <button class="btn btn-secondary" onclick="copyCode()" style="font-size:12px;padding:6px 14px;">📋 Copy Code</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="lbl" style="margin-bottom:10px;">Players Joined — <span id="lobbyCount">0</span></div>
+    <div class="player-list" id="lobbyPlayerList">
+      <div class="dim tc" style="padding:12px;">No one has joined yet…</div>
+    </div>
+  </div>
+
+  <div id="lobbyErr" class="err-msg">Need at least 1 player to join first!</div>
+
+  <div class="spacer"></div>
+  <button class="btn btn-primary btn-w" onclick="hostStartGame()">▶ Start Game</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: Join (player)
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-join">
+  <div style="margin-bottom:24px;">
+    <div style="font-size:40px;margin-bottom:10px;">🚀</div>
+    <h1 style="font-size:22px;font-weight:800;">Join a Game</h1>
+    <p class="dim mt8">Get the 6-letter room code from your host</p>
+  </div>
+
+  <div class="card">
+    <div class="lbl">Room Code</div>
+    <input type="text" id="joinCodeInput" placeholder="e.g. A3K9M2"
+           maxlength="6" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
+           style="font-family:monospace;font-size:22px;letter-spacing:.2em;text-align:center;margin-bottom:14px;"
+           onkeydown="if(event.key==='Enter')document.getElementById('joinNameInput').focus()">
+    <div class="lbl">Your Name</div>
+    <input type="text" id="joinNameInput" placeholder="Enter your name…" maxlength="20"
+           onkeydown="if(event.key==='Enter')playerJoin()">
+  </div>
+
+  <div id="joinErr" class="err-msg" style="display:none;"></div>
+
+  <div class="spacer"></div>
+  <button class="btn btn-teal btn-w" style="margin-top:0;" onclick="playerJoin()">🚀 Join Game</button>
+  <button class="btn btn-secondary btn-w" onclick="showScreen('welcome')">← Back</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: Waiting (player waiting for host)
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-waiting">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+    <div>
+      <h1 style="font-size:18px;font-weight:800;">Waiting for Host…</h1>
+      <p class="dim mt8" style="font-size:13px;">The game will start soon!</p>
+    </div>
+    <button class="exit-btn" onclick="confirmLeave()">✕ Leave</button>
+  </div>
+
+  <div style="text-align:center;padding:24px 0;">
+    <div style="font-size:52px;" class="spin">⏳</div>
+    <p class="dim" style="margin-top:12px;">Host is setting up the game…</p>
+  </div>
+
+  <div class="card">
+    <div class="lbl">Players in Room</div>
+    <div class="player-list" id="waitingPlayerList"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: Reveal (shared for local + host MP)
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-reveal">
+  <div class="tc" style="margin-bottom:20px;">
+    <div style="font-size:48px;margin-bottom:12px;">🤫</div>
+    <h1 style="font-size:22px;font-weight:800;" id="revealHeading">Pass the device to <span id="revealKeeperName" style="color:var(--accent)"></span></h1>
+    <p class="dim mt8" id="revealSubtext">Everyone else, look away!</p>
+  </div>
+
+  <div class="card">
+    <p class="dim" style="font-size:13px;margin-bottom:4px;">
+      <strong style="color:var(--text);">Keeper only:</strong> Tap to see your secret object. Memorize it!
+    </p>
+    <div class="secret-box" id="secretBox" onclick="revealSecret()">
+      <div style="font-size:40px;">👁️</div>
+      <div style="font-weight:600;font-size:16px;">Tap to reveal your secret object</div>
+      <div class="dim" style="font-size:12px;">Make sure no one else is watching!</div>
+    </div>
+    <div id="revealContent" style="display:none;text-align:center;">
+      <div style="font-size:14px;color:var(--dim);margin-bottom:6px;">Your secret object is:</div>
+      <div class="secret-text-big" id="secretDisplay"></div>
+      <div class="dim" style="font-size:12px;margin-top:8px;">Memorize it — don't say it aloud!</div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+  <button class="btn btn-primary btn-w" id="readyBtn" onclick="beginGame()" disabled style="opacity:.35;transition:opacity .3s;">
+    I've memorized it — Start! →
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: Game (local + host in MP — keeper view)
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-game">
+  <div class="game-topbar">
+    <div>
+      <div class="lbl">Keeper</div>
+      <div style="font-weight:700;display:flex;align-items:center;gap:6px;">
+        <span id="gKeeperName"></span>
+        <span class="chip chip-keeper">🔒 secret</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="tc">
+        <div class="lbl">Left</div>
+        <div class="q-counter"><span id="qLeft">21</span><span style="font-size:14px;color:var(--dim)">/21</span></div>
+      </div>
+      <button class="exit-btn" onclick="confirmExit()">✕ Exit</button>
+    </div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:100%"></div></div>
+
+  <div class="turn-chip"><div class="pulse-dot"></div><span id="turnText">Loading…</span></div>
+
+  <!-- Shown only in local mode -->
+  <div class="guess-banner" id="guessBanner" onclick="openGuess()">
+    <div class="guess-banner-icon">🎯</div>
+    <div class="guess-banner-text">
+      <div class="guess-banner-title">Make a Guess!</div>
+      <div class="guess-banner-sub">Anyone can guess the object at any time</div>
+    </div>
+    <div class="guess-banner-arrow">›</div>
+  </div>
+
+  <!-- Shown only in MP host mode: players ask from their devices -->
+  <div class="status-banner status-waiting-host" id="hostWaitBanner" style="display:none;">
+    <span style="font-size:18px;">📡</span>
+    <span>Waiting for players to ask questions from their devices…</span>
+  </div>
+
+  <div id="qaEmpty" class="tc dim" style="padding:14px 0;display:block;">No questions yet!</div>
+  <div class="qa-scroll" id="qaList" style="display:none;"></div>
+
+  <!-- Local-mode question input -->
+  <div class="card" id="askCard" style="margin-bottom:0;">
+    <div class="lbl">Ask a Yes / No Question</div>
+    <div class="inrow" style="margin-bottom:0;">
+      <input type="text" id="qInput" placeholder="Is it alive? Can you eat it?" maxlength="120"
+             onkeydown="if(event.key==='Enter')askQuestion()">
+      <button class="btn btn-primary" onclick="askQuestion()">Ask</button>
+    </div>
+    <div class="verbal-link" onclick="askVerbally()">
+      🗣️ We asked verbally — skip typing, just get the answer
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: Answer (keeper answers)
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-answer">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+    <button class="exit-btn" onclick="confirmExit()">✕ Exit</button>
+  </div>
+  <div class="tc" style="margin-bottom:20px;">
+    <div style="font-size:40px;margin-bottom:10px;">🤔</div>
+    <h1 style="font-size:20px;font-weight:800;">Pass to <span id="ansKeeperName" style="color:var(--accent)"></span></h1>
+    <p class="dim mt8">Keeper — answer this question honestly:</p>
+  </div>
+  <div class="card tc">
+    <div class="lbl">Question #<span id="ansQNum"></span> — asked by <span id="ansAsker"></span></div>
+    <div style="font-size:18px;font-weight:600;margin:10px 0;line-height:1.4;" id="ansPendingQ"></div>
+  </div>
+  <div class="lbl tc">How do you answer?</div>
+  <div class="answer-grid">
+    <button class="ans-btn ans-yes"       onclick="answer('Yes')"><span class="em">✅</span>Yes</button>
+    <button class="ans-btn ans-no"        onclick="answer('No')"><span class="em">❌</span>No</button>
+    <button class="ans-btn ans-maybe"     onclick="answer('Maybe')"><span class="em">🤷</span>Maybe</button>
+    <button class="ans-btn ans-sometimes" onclick="answer('Sometimes')"><span class="em">⚡</span>Sometimes</button>
+  </div>
+  <div class="ans-guess-link" onclick="answerScreenGuess()">
+    🎯 Someone wants to guess instead — tap here
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: MP Player (questioner in online game)
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-mp-player">
+  <div class="game-topbar">
+    <div>
+      <div class="lbl">Keeper</div>
+      <div style="font-weight:700;display:flex;align-items:center;gap:6px;">
+        <span id="mpKeeperName"></span>
+        <span class="chip chip-keeper">🔒 secret</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="tc">
+        <div class="lbl">Left</div>
+        <div class="q-counter"><span id="mpQLeft">21</span><span style="font-size:14px;color:var(--dim)">/21</span></div>
+      </div>
+      <button class="exit-btn" onclick="confirmLeave()">✕ Leave</button>
+    </div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="mpProgFill" style="width:100%"></div></div>
+
+  <div class="turn-chip"><div class="pulse-dot"></div><span id="mpTurnText">Connected!</span></div>
+
+  <!-- When keeper is answering -->
+  <div class="status-banner status-answering" id="mpAnsweringBanner" style="display:none;">
+    <span style="font-size:18px;" class="spin">🔄</span>
+    <span id="mpAnsweringText">Keeper is answering…</span>
+  </div>
+
+  <!-- Guess banner (hidden while answering) -->
+  <div class="guess-banner" id="mpGuessBanner" onclick="mpOpenGuess()">
+    <div class="guess-banner-icon">🎯</div>
+    <div class="guess-banner-text">
+      <div class="guess-banner-title">Make a Guess!</div>
+      <div class="guess-banner-sub">Anyone can guess the object at any time</div>
+    </div>
+    <div class="guess-banner-arrow">›</div>
+  </div>
+
+  <div id="mpQaEmpty" class="tc dim" style="padding:14px 0;display:block;">No questions yet — ask away!</div>
+  <div class="qa-scroll" id="mpQaList" style="display:none;"></div>
+
+  <div class="card" id="mpAskCard" style="margin-bottom:0;">
+    <div class="lbl">Ask a Yes / No Question</div>
+    <div class="inrow">
+      <input type="text" id="mpQInput" placeholder="Is it alive? Can you eat it?" maxlength="120"
+             onkeydown="if(event.key==='Enter')mpAskQuestion()">
+      <button class="btn btn-primary" onclick="mpAskQuestion()">Ask</button>
+    </div>
+    <div class="verbal-link" onclick="mpAskVerbal()">
+      🗣️ We asked verbally — skip typing, just get the answer
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN: Result
+══════════════════════════════════════════ -->
+<div class="screen" id="screen-result">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+    <div class="result-icon" id="resIcon"></div>
+    <div class="result-title" id="resTitle"></div>
+    <p class="dim tc mt8" id="resSub"></p>
+    <div class="object-box mt16">
+      <div class="object-box-label">The secret object was</div>
+      <div class="object-box-val" id="resFinalObj"></div>
+    </div>
+    <div class="card mt16">
+      <div class="lbl">Game Stats</div>
+      <div class="stats-row">
+        <div><div class="stat-val" id="sUsed">0</div><div class="stat-lbl">Questions Used</div></div>
+        <div><div class="stat-val" id="sLeft">0</div><div class="stat-lbl">Left Unused</div></div>
+        <div><div class="stat-val" id="sPlayers">0</div><div class="stat-lbl">Players</div></div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-w mt16" id="playAgainBtn" onclick="playAgain()">🔄 Play Again</button>
+    <button class="btn btn-secondary btn-w" onclick="goHome()">🏠 Home</button>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+
+<!-- ══ OVERLAY: Guess ══ -->
+<div class="overlay" id="guessOverlay">
+  <div class="ov-card">
+    <div style="font-size:36px;text-align:center;margin-bottom:10px;">🎯</div>
+    <h2 style="text-align:center;margin-bottom:5px;font-size:20px;">Make a Guess!</h2>
+    <p class="dim tc" style="margin-bottom:18px;font-size:13px;">What is the secret object?</p>
+    <div class="lbl" id="guesserLabel">Who's guessing?</div>
+    <select id="guesserSel" style="margin-bottom:14px;display:none;"></select>
+    <div class="lbl">Your answer</div>
+    <input type="text" id="guessInput" placeholder="I think it's a…" maxlength="60"
+           onkeydown="if(event.key==='Enter')submitGuess()" style="margin-bottom:12px;">
+    <div id="badGuessMsg" class="err-msg">❌ That's not it — keep asking questions!</div>
+    <div id="guessAttemptInfo" class="dim tc" style="font-size:12px;margin-bottom:10px;display:none;"></div>
+    <button class="btn btn-primary btn-w" onclick="submitGuess()">Submit Guess</button>
+    <button class="btn btn-secondary btn-w" onclick="closeGuess()">Not ready yet</button>
+  </div>
+</div>
+
+<!-- ══ OVERLAY: Exit confirm ══ -->
+<div class="overlay" id="exitOverlay">
+  <div class="ov-card" style="text-align:center;max-width:360px;">
+    <div style="font-size:40px;margin-bottom:12px;">🚪</div>
+    <h2 style="margin-bottom:8px;" id="exitTitle">Exit the Game?</h2>
+    <p class="dim" style="margin-bottom:20px;font-size:14px;" id="exitMsg">
+      The current game will end for everyone.
+    </p>
+    <button class="btn btn-danger btn-w" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;margin-top:0;" onclick="doExit()">Yes, Exit</button>
+    <button class="btn btn-secondary btn-w" onclick="closeExitOverlay()">Keep Playing</button>
+  </div>
+</div>
+
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════
+//  OBJECTS
+// ═══════════════════════════════════════════════════
+const OBJECTS = [
+  "Umbrella","Toaster","Hammock","Chandelier","Compass","Hourglass","Typewriter",
+  "Thermos","Kaleidoscope","Periscope","Candelabra","Magnifying Glass","Abacus",
+  "Sundial","Metronome","Lava Lamp","Snow Globe","Music Box","Gramophone",
+  "Telescope","Bellows","Boomerang","Pinwheel","Slinky","Yo-yo","Accordion",
+  "Platypus","Hummingbird","Narwhal","Axolotl","Pangolin","Capybara",
+  "Red Panda","Fennec Fox","Okapi","Flying Squirrel","Blobfish",
+  "Mantis Shrimp","Glass Frog","Mimic Octopus","Peacock Spider",
+  "Shoebill Stork","Proboscis Monkey","Aye-aye","Star-nosed Mole",
+  "Leafy Sea Dragon","Naked Mole Rat","Tarsier",
+  "Avocado","Pretzel","Durian","Wasabi","Artichoke","Mochi","Baklava",
+  "Soufflé","Churro","Baguette","Truffle","Pomegranate","Star Fruit",
+  "Dragon Fruit","Rambutan","Jackfruit","Tempura","Croissant","Kimchi",
+  "Cannoli","Tiramisu","Brigadeiro",
+  "Volcano","Glacier","Geyser","Stalactite","Sand Dune","Tide Pool",
+  "Sinkhole","Aurora Borealis","Coral Reef","Quicksand","Mangrove","Geode",
+  "Submarine","Hot Air Balloon","Zeppelin","Gondola","Rickshaw",
+  "Catamaran","Monorail","Hovercraft","Icebreaker Ship","Dogsled","Paraglider",
+  "Theremin","Didgeridoo","Sitar","Harpsichord","Bagpipes","Marimba",
+  "Steel Drum","Banjo","Hurdy-Gurdy","Glass Harmonica","Handpan","Dulcimer",
+  "Lighthouse","Aqueduct","Windmill","Treehouse","Igloo","Pagoda",
+  "Ziggurat","Geodesic Dome","Catapult","Obelisk","Trebuchet",
+  "Transistor Radio","Film Projector","Rotary Phone","Polaroid Camera",
+  "Telegraph","Stereoscope","Slide Rule","Orrery","Zoetrope",
+  "Origami Crane","Dreamcatcher","Piñata","Rubik's Cube","Magic 8-Ball",
+  "Newton's Cradle","Möbius Strip","Spirograph","Tamagotchi",
+];
+
+// ═══════════════════════════════════════════════════
+//  LOCAL GAME STATE
+// ═══════════════════════════════════════════════════
+const G = {
+  players:[],
+  keeperIdx:-1,
+  secret:'',
+  questions:[],
+  askerCursor:0,
+  pendingQ:'',
+  pendingAsker:'',
+  MAX:21,
+  revealed:false,
+};
+
+function nonKeepers(){ return G.players.filter((_,i)=>i!==G.keeperIdx); }
+function keeper(){ return G.players[G.keeperIdx] || ''; }
+function qLeft(){ return G.MAX - G.questions.length; }
+function curAsker(){
+  const nk = nonKeepers();
+  return nk.length ? nk[G.askerCursor % nk.length] : '';
+}
+
+// ═══════════════════════════════════════════════════
+//  MULTIPLAYER STATE
+// ═══════════════════════════════════════════════════
+const MP = {
+  mode: null,       // null | 'host' | 'player'
+  peer: null,       // PeerJS Peer
+  conns: [],        // host: DataConnection[]
+  hostConn: null,   // player: DataConnection to host
+  myName: '',
+  roomCode: '',
+  lobbyPlayers: [], // [{name, connId}] tracked on host
+  MAX: 21,          // synced from host to player
+};
+
+// ═══════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════
+//  LOCAL SETUP
+// ═══════════════════════════════════════════════════
+function goSetup(){
+  MP.mode = null;
+  G.players=[]; G.keeperIdx=-1; G.secret=''; G.questions=[]; G.askerCursor=0; G.revealed=false;
+  renderPlayers();
+  document.getElementById('nameInput').value='';
+  document.getElementById('setupErr').style.display='none';
+  document.getElementById('keeperErr').style.display='none';
+  showScreen('setup');
+  setTimeout(()=>document.getElementById('nameInput').focus(),300);
+}
+
+function addPlayer(){
+  const inp=document.getElementById('nameInput');
+  const n=inp.value.trim();
+  if(!n) return;
+  if(G.players.map(p=>p.toLowerCase()).includes(n.toLowerCase())){inp.select();return;}
+  G.players.push(n);
+  inp.value='';
+  renderPlayers();
+  inp.focus();
+  document.getElementById('setupErr').style.display='none';
+  document.getElementById('keeperErr').style.display='none';
+}
+
+function removePlayer(i){
+  if(G.keeperIdx===i) G.keeperIdx=-1;
+  else if(G.keeperIdx>i) G.keeperIdx--;
+  G.players.splice(i,1);
+  renderPlayers();
+}
+
+function setKeeper(i){
+  G.keeperIdx = (G.keeperIdx===i) ? -1 : i;
+  renderPlayers();
+  document.getElementById('keeperErr').style.display='none';
+}
+
+function renderPlayers(){
+  const sec=document.getElementById('playersSection');
+  const list=document.getElementById('playerList');
+  const hint=document.getElementById('keeperHintText');
+  if(!G.players.length){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  hint.innerHTML = G.keeperIdx===-1
+    ? 'Tap <b>👑</b> next to a player to make them Keeper'
+    : `<b style="color:var(--accent)">👑 ${G.players[G.keeperIdx]}</b> is the Keeper`;
+  list.innerHTML=G.players.map((p,i)=>`
+    <div class="player-row ${i===G.keeperIdx?'is-keeper':''}">
+      <div class="avatar av${i%10}">${p[0].toUpperCase()}</div>
+      <span style="flex:1;">${p}</span>
+      ${G.keeperIdx===-1||G.keeperIdx===i
+        ? `<button class="crown-btn" onclick="setKeeper(${i})">👑</button>`
+        : `<span class="dim" style="font-size:12px;padding-right:4px;">questioner</span>`}
+      <button class="rm-btn" onclick="removePlayer(${i})">×</button>
+    </div>`).join('');
+}
+
+function startLocalGame(){
+  document.getElementById('setupErr').style.display='none';
+  document.getElementById('keeperErr').style.display='none';
+  if(G.players.length<2){ document.getElementById('setupErr').style.display='block'; return; }
+  if(G.keeperIdx===-1){ document.getElementById('keeperErr').style.display='block'; return; }
+  G.secret = randObj();
+  G.questions=[]; G.askerCursor=0; G.revealed=false;
+  initRevealScreen();
+  showScreen('reveal');
+}
+
+// ═══════════════════════════════════════════════════
+//  REVEAL
+// ═══════════════════════════════════════════════════
+function initRevealScreen(mpMode=false){
+  document.getElementById('revealHeading').innerHTML =
+    mpMode
+      ? `You are the <span style="color:var(--accent)">Keeper</span>`
+      : `Pass the device to <span id="revealKeeperName" style="color:var(--accent)">${keeper()}</span>`;
+  document.getElementById('revealSubtext').textContent =
+    mpMode ? "Your friends are waiting — tap to see your secret object!" : "Everyone else, look away!";
+  document.getElementById('secretBox').style.display='flex';
+  document.getElementById('revealContent').style.display='none';
+  const rb=document.getElementById('readyBtn');
+  rb.disabled=true; rb.style.opacity='.35';
+}
+
+function revealSecret(){
+  if(G.revealed) return;
+  G.revealed=true;
+  document.getElementById('secretBox').style.display='none';
+  document.getElementById('secretDisplay').textContent=G.secret;
+  document.getElementById('revealContent').style.display='block';
+  const rb=document.getElementById('readyBtn');
+  rb.disabled=false; rb.style.opacity='1';
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME (local + host MP)
+// ═══════════════════════════════════════════════════
+function beginGame(){
+  refreshGameUI();
+  showScreen('game');
+  // In MP host mode: broadcast game started to all players
+  if(MP.mode==='host') mpHostSendState('game');
+  else setTimeout(()=>document.getElementById('qInput').focus(),300);
+}
+
+function refreshGameUI(){
+  const left=qLeft();
+  const isMP = MP.mode==='host';
+
+  document.getElementById('gKeeperName').textContent = isMP ? MP.myName : keeper();
+  document.getElementById('qLeft').textContent = left;
+  document.getElementById('progFill').style.width = (left/G.MAX*100)+'%';
+
+  const qc=document.getElementById('qLeft');
+  qc.style.color = left<=5?'#f87171':left<=10?'#fb923c':'';
+
+  // Host MP: hide local ask input, show waiting banner. Local: opposite.
+  document.getElementById('askCard').style.display = isMP ? 'none' : 'block';
+  document.getElementById('guessBanner').style.display = isMP ? 'none' : 'flex';
+  document.getElementById('hostWaitBanner').style.display = isMP ? 'flex' : 'none';
+
+  if(isMP){
+    document.getElementById('turnText').textContent = 'Waiting for players to ask questions…';
+  } else {
+    document.getElementById('turnText').textContent = curAsker()+"'s turn to ask a question";
+  }
+
+  renderQaList('qaList','qaEmpty', G.questions);
+  refreshGuesserSelect();
+}
+
+function renderQaList(listId, emptyId, questions){
+  const list=document.getElementById(listId);
+  const empty=document.getElementById(emptyId);
+  if(!questions.length){ empty.style.display='block'; list.style.display='none'; return; }
+  empty.style.display='none'; list.style.display='flex';
+  const icons={Yes:'✅',No:'❌',Maybe:'🤷',Sometimes:'⚡'};
+  list.innerHTML=[...questions].reverse().map((q,ri)=>{
+    const n=questions.length-ri;
+    const cls=q.answer.toLowerCase();
+    return `<div class="qa-item ${cls}">
+      <div class="qa-meta">Q${n} · ${q.asker}</div>
+      <div class="qa-q">${q.text}</div>
+      <div class="qa-a">${icons[q.answer]||'❓'} ${q.answer}</div>
+    </div>`;
+  }).join('');
+}
+
+function askQuestion(){
+  const inp=document.getElementById('qInput');
+  const q=inp.value.trim();
+  if(!q||!qLeft()) return;
+  inp.value='';
+  _showAnswerScreen(q, curAsker());
+}
+
+function askVerbally(){
+  _showAnswerScreen('🗣️ Asked verbally', curAsker());
+}
+
+function _showAnswerScreen(question, asker){
+  G.pendingQ = question;
+  G.pendingAsker = asker;
+  document.getElementById('ansKeeperName').textContent = keeper();
+  document.getElementById('ansQNum').textContent = G.questions.length+1;
+  document.getElementById('ansAsker').textContent = asker;
+  document.getElementById('ansPendingQ').textContent = question;
+  showScreen('answer');
+}
+
+function answer(ans){
+  G.questions.push({asker:G.pendingAsker, text:G.pendingQ, answer:ans});
+  G.askerCursor = (G.askerCursor+1) % Math.max(1, nonKeepers().length);
+
+  if(!qLeft()){
+    if(MP.mode==='host') mpHostBroadcast({type:'game_over', won:false, obj:G.secret, questionsLen:G.questions.length});
+    endGame(false);
+    return;
+  }
+
+  if(MP.mode==='host') mpHostSendState('game');
+  refreshGameUI();
+  showScreen('game');
+  if(MP.mode!=='host') setTimeout(()=>document.getElementById('qInput').focus(),300);
+}
+
+function answerScreenGuess(){
+  showScreen('game');
+  refreshGameUI();
+  openGuess();
+}
+
+// ═══════════════════════════════════════════════════
+//  GUESSING
+// ═══════════════════════════════════════════════════
+function refreshGuesserSelect(){
+  const sel=document.getElementById('guesserSel');
+  const label=document.getElementById('guesserLabel');
+  const nk=nonKeepers();
+  if(nk.length>1){
+    sel.style.display='block';
+    sel.innerHTML=nk.map(p=>`<option value="${p}">${p}</option>`).join('');
+    label.style.display='block';
+  } else {
+    sel.style.display='none';
+    label.style.display='none';
+  }
+}
+
+function openGuess(){
+  refreshGuesserSelect();
+  document.getElementById('guessInput').value='';
+  document.getElementById('badGuessMsg').style.display='none';
+  document.getElementById('guessAttemptInfo').style.display='none';
+  document.getElementById('guessOverlay').classList.add('show');
+  setTimeout(()=>document.getElementById('guessInput').focus(),200);
+}
+
+function mpOpenGuess(){
+  document.getElementById('guesserSel').style.display='none';
+  document.getElementById('guesserLabel').style.display='none';
+  document.getElementById('guessInput').value='';
+  document.getElementById('badGuessMsg').style.display='none';
+  document.getElementById('guessAttemptInfo').style.display='none';
+  document.getElementById('guessOverlay').classList.add('show');
+  setTimeout(()=>document.getElementById('guessInput').focus(),200);
+}
+
+function closeGuess(){ document.getElementById('guessOverlay').classList.remove('show'); }
+
+function normalize(s){
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g,'').replace(/\s+/g,' ').trim();
+}
+function isCorrect(guess, secret){
+  const g=normalize(guess), s=normalize(secret);
+  if(g===s) return true;
+  return normalize(secret).split(' ').every(w=>normalize(guess).includes(w));
+}
+
+function submitGuess(){
+  const guess=document.getElementById('guessInput').value.trim();
+  if(!guess) return;
+
+  if(MP.mode==='player'){
+    // Send to host for verification
+    MP.hostConn.send({type:'guess', guess, name:MP.myName});
+    document.getElementById('badGuessMsg').style.display='none';
+    document.getElementById('guessAttemptInfo').textContent='Checking with host…';
+    document.getElementById('guessAttemptInfo').style.display='block';
+    return;
+  }
+
+  // Local or host mode: check locally
+  if(isCorrect(guess, G.secret)){
+    const who = MP.mode==='host'
+      ? (document.getElementById('guesserSel').value || MP.myName)
+      : (document.getElementById('guesserSel').value || nonKeepers()[0] || '');
+    closeGuess();
+    if(MP.mode==='host') mpHostBroadcast({type:'game_over', won:true, winner:who, obj:G.secret, questionsLen:G.questions.length});
+    endGame(true, who);
+  } else {
+    document.getElementById('badGuessMsg').style.display='block';
+    const ql=qLeft();
+    const info=document.getElementById('guessAttemptInfo');
+    info.textContent=ql+' question'+(ql!==1?'s':'')+' remaining — keep digging!';
+    info.style.display='block';
+    document.getElementById('guessInput').select();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  END GAME
+// ═══════════════════════════════════════════════════
+function endGame(won, winner=''){
+  closeGuess();
+  const used=G.questions.length, left=qLeft();
+  document.getElementById('resFinalObj').textContent = G.secret;
+  document.getElementById('sUsed').textContent = used;
+  document.getElementById('sLeft').textContent = left;
+  document.getElementById('sPlayers').textContent = G.players.length || (MP.lobbyPlayers.length+1);
+
+  if(won){
+    document.getElementById('resIcon').textContent='🎉';
+    document.getElementById('resTitle').innerHTML=`<span style="color:var(--accent)">${winner}</span> got it!`;
+    document.getElementById('resSub').textContent=
+      used===0?'Guessed on the very first try!':
+      `Correctly guessed after ${used} question${used!==1?'s':''}!`;
+    confetti();
+  } else {
+    document.getElementById('resIcon').textContent='😅';
+    document.getElementById('resTitle').textContent='Out of questions!';
+    document.getElementById('resSub').textContent='The mystery stumped everyone — the Keeper wins!';
+  }
+  showScreen('result');
+}
+
+function playAgain(){
+  if(MP.mode==='host'){
+    // Reset for a new hosted game
+    G.questions=[]; G.askerCursor=0; G.revealed=false;
+    G.secret = randObj();
+    mpHostBroadcast({type:'new_round'});
+    initRevealScreen(true);
+    showScreen('reveal');
+  } else if(MP.mode==='player'){
+    // Player goes back to waiting
+    showScreen('waiting');
+  } else {
+    goSetup();
+  }
+}
+
+function goHome(){
+  mpCleanup();
+  showScreen('welcome');
+}
+
+// ═══════════════════════════════════════════════════
+//  EXIT / LEAVE
+// ═══════════════════════════════════════════════════
+function confirmExit(){
+  document.getElementById('exitTitle').textContent = MP.mode==='host' ? 'Close the Room?' : 'Exit the Game?';
+  document.getElementById('exitMsg').textContent = MP.mode==='host'
+    ? 'This will end the game for all players.'
+    : 'The current game will be lost.';
+  document.getElementById('exitOverlay').classList.add('show');
+}
+function confirmLeave(){
+  document.getElementById('exitTitle').textContent = 'Leave the Game?';
+  document.getElementById('exitMsg').textContent = 'You will be disconnected from this game.';
+  document.getElementById('exitOverlay').classList.add('show');
+}
+function closeExitOverlay(){ document.getElementById('exitOverlay').classList.remove('show'); }
+function doExit(){
+  closeExitOverlay();
+  mpCleanup();
+  showScreen('welcome');
+}
+
+// ═══════════════════════════════════════════════════
+//  ── MULTIPLAYER: HOST ──
+// ═══════════════════════════════════════════════════
+function hostCreate(){
+  const name = document.getElementById('hostNameInput').value.trim();
+  document.getElementById('hostSetupErr').style.display='none';
+  document.getElementById('hostConnErr').style.display='none';
+  if(!name){ document.getElementById('hostSetupErr').style.display='block'; return; }
+
+  if(typeof Peer === 'undefined'){
+    document.getElementById('hostConnErr').textContent = 'PeerJS not loaded — check your internet connection.';
+    document.getElementById('hostConnErr').style.display='block'; return;
+  }
+
+  MP.mode = 'host';
+  MP.myName = name;
+  MP.conns = [];
+  MP.lobbyPlayers = [];
+  G.questions=[]; G.askerCursor=0; G.revealed=false;
+  // Use host's name as the Keeper
+  G.players = [name];
+  G.keeperIdx = 0;
+  G.secret = randObj();
+
+  const code = randCode();
+  MP.roomCode = code;
+
+  MP.peer = new Peer('21q-'+code.toLowerCase(), {debug:0});
+
+  MP.peer.on('open', ()=>{
+    document.getElementById('lobbyCode').textContent = code;
+    document.getElementById('lobbyCount').textContent = '0';
+    document.getElementById('lobbyPlayerList').innerHTML = '<div class="dim tc" style="padding:12px;">No one has joined yet…</div>';
+    showScreen('lobby');
+  });
+
+  MP.peer.on('connection', (conn)=>{
+    conn.on('open', ()=>{
+      MP.conns.push(conn);
+      conn.on('data', (data)=>hostHandleMsg(conn, data));
+      conn.on('close', ()=>{
+        MP.conns = MP.conns.filter(c=>c!==conn);
+        const idx = MP.lobbyPlayers.findIndex(p=>p.connId===conn.peer);
+        if(idx!==-1){
+          const leaving = MP.lobbyPlayers[idx].name;
+          MP.lobbyPlayers.splice(idx,1);
+          updateLobbyUI();
+          if(G.questions.length > 0){
+            mpHostBroadcast({type:'player_left', name:leaving});
+          }
+        }
+      });
+    });
+  });
+
+  MP.peer.on('error', (err)=>{
+    if(err.type==='unavailable-id'){
+      // Room code taken, try again
+      hostCreate();
+    } else {
+      document.getElementById('hostConnErr').textContent = 'Connection error: '+err.type+'. Try again.';
+      document.getElementById('hostConnErr').style.display='block';
+      showScreen('host-setup');
+      mpCleanup();
+    }
+  });
+}
+
+function hostHandleMsg(conn, data){
+  switch(data.type){
+    case 'hello':
+      MP.lobbyPlayers.push({name:data.name, connId:conn.peer});
+      // Tell this new player the current lobby state
+      conn.send({type:'lobby_update', players:MP.lobbyPlayers.map(p=>p.name), keeperName:MP.myName});
+      // Tell everyone else
+      mpHostBroadcast({type:'lobby_update', players:MP.lobbyPlayers.map(p=>p.name), keeperName:MP.myName});
+      updateLobbyUI();
+      break;
+
+    case 'ask':
+      if(G.questions.length >= G.MAX) return;
+      // Only process one question at a time
+      G.pendingQ = data.question;
+      G.pendingAsker = data.name;
+      mpHostSendState('answer'); // tell all players keeper is answering
+      document.getElementById('ansKeeperName').textContent = MP.myName;
+      document.getElementById('ansQNum').textContent = G.questions.length+1;
+      document.getElementById('ansAsker').textContent = data.name;
+      document.getElementById('ansPendingQ').textContent = data.question;
+      showScreen('answer');
+      break;
+
+    case 'verbal':
+      if(G.questions.length >= G.MAX) return;
+      G.pendingQ = '🗣️ Asked verbally';
+      G.pendingAsker = data.name;
+      mpHostSendState('answer');
+      document.getElementById('ansKeeperName').textContent = MP.myName;
+      document.getElementById('ansQNum').textContent = G.questions.length+1;
+      document.getElementById('ansAsker').textContent = data.name;
+      document.getElementById('ansPendingQ').textContent = '🗣️ Asked verbally';
+      showScreen('answer');
+      break;
+
+    case 'guess':
+      if(isCorrect(data.guess, G.secret)){
+        mpHostBroadcast({type:'game_over', won:true, winner:data.name, obj:G.secret, questionsLen:G.questions.length});
+        endGame(true, data.name);
+      } else {
+        conn.send({type:'bad_guess'});
+      }
+      break;
+  }
+}
+
+function mpHostSendState(phase){
+  mpHostBroadcast({
+    type:'state', phase,
+    keeperName: MP.myName,
+    questions: G.questions,
+    MAX: G.MAX,
+    pendingQ: G.pendingQ,
+    pendingAsker: G.pendingAsker,
+  });
+}
+
+function mpHostBroadcast(msg){
+  MP.conns.forEach(c=>{ try{ if(c.open) c.send(msg); }catch(e){} });
+}
+
+function updateLobbyUI(){
+  const count = MP.lobbyPlayers.length;
+  document.getElementById('lobbyCount').textContent = count;
+  if(!count){
+    document.getElementById('lobbyPlayerList').innerHTML='<div class="dim tc" style="padding:12px;">No one has joined yet…</div>';
+    return;
+  }
+  document.getElementById('lobbyPlayerList').innerHTML = MP.lobbyPlayers.map((p,i)=>`
+    <div class="player-row">
+      <div class="avatar av${(i+1)%10}">${p.name[0].toUpperCase()}</div>
+      <span>${p.name}</span>
+    </div>`).join('');
+}
+
+function hostStartGame(){
+  document.getElementById('lobbyErr').style.display='none';
+  if(!MP.lobbyPlayers.length){ document.getElementById('lobbyErr').style.display='block'; return; }
+  // Broadcast that game is starting (players stay on waiting screen)
+  mpHostBroadcast({type:'game_starting'});
+  initRevealScreen(true);
+  showScreen('reveal');
+}
+
+function copyCode(){
+  navigator.clipboard.writeText(MP.roomCode).then(()=>{
+    const btn=event.target;
+    const orig=btn.textContent;
+    btn.textContent='✅ Copied!';
+    setTimeout(()=>btn.textContent=orig,1500);
+  }).catch(()=>{
+    // Fallback
+    prompt('Room code:', MP.roomCode);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  ── MULTIPLAYER: PLAYER ──
+// ═══════════════════════════════════════════════════
+function playerJoin(){
+  const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+  const name = document.getElementById('joinNameInput').value.trim();
+  const errEl = document.getElementById('joinErr');
+  errEl.style.display='none';
+
+  if(code.length!==6){ errEl.textContent='Enter the full 6-character room code.'; errEl.style.display='block'; return; }
+  if(!name){ errEl.textContent='Enter your name before joining.'; errEl.style.display='block'; return; }
+
+  if(typeof Peer === 'undefined'){
+    errEl.textContent='PeerJS not loaded — check your internet and try again.';
+    errEl.style.display='block'; return;
+  }
+
+  MP.mode = 'player';
+  MP.myName = name;
+  MP.roomCode = code;
+
+  MP.peer = new Peer({debug:0});
+
+  MP.peer.on('open', ()=>{
+    MP.hostConn = MP.peer.connect('21q-'+code.toLowerCase(), {reliable:true});
+
+    MP.hostConn.on('open', ()=>{
+      MP.hostConn.send({type:'hello', name});
+      showScreen('waiting');
+    });
+
+    MP.hostConn.on('data', (data)=>playerHandleMsg(data));
+
+    MP.hostConn.on('close', ()=>{
+      if(document.getElementById('screen-result').classList.contains('active')) return;
+      alert('⚠️ Connection to host lost. The game has ended.');
+      mpCleanup();
+      showScreen('welcome');
+    });
+  });
+
+  MP.peer.on('error', (err)=>{
+    mpCleanup();
+    let msg = 'Could not connect.';
+    if(err.type==='peer-unavailable') msg = 'Room not found — check the code and try again.';
+    else if(err.type==='network') msg = 'Network error — check your connection.';
+    errEl.textContent = msg;
+    errEl.style.display='block';
+  });
+}
+
+function playerHandleMsg(data){
+  switch(data.type){
+    case 'lobby_update':
+      // Update waiting screen
+      document.getElementById('waitingPlayerList').innerHTML =
+        [data.keeperName, ...data.players].map((p,i)=>`
+          <div class="player-row">
+            <div class="avatar av${i%10}">${p[0].toUpperCase()}</div>
+            <span>${p}</span>
+            ${i===0?'<span class="chip chip-keeper" style="margin-left:auto;">👑 Keeper</span>':''}
+          </div>`).join('');
+      break;
+
+    case 'game_starting':
+      // Host is about to start; just wait
+      break;
+
+    case 'state':
+      mpPlayerUpdateUI(data);
+      break;
+
+    case 'bad_guess':
+      document.getElementById('badGuessMsg').style.display='block';
+      document.getElementById('guessAttemptInfo').textContent='Wrong! Keep asking questions.';
+      document.getElementById('guessAttemptInfo').style.display='block';
+      break;
+
+    case 'game_over':
+      closeGuess();
+      mpShowResult(data.won, data.winner||'', data.obj, data.questionsLen);
+      break;
+
+    case 'player_left':
+      // Could show a toast — for now just update UI on next state
+      break;
+
+    case 'new_round':
+      G.questions=[];
+      showScreen('waiting');
+      break;
+  }
+}
+
+function mpPlayerUpdateUI(data){
+  MP.MAX = data.MAX || 21;
+  G.questions = data.questions || [];
+  const left = MP.MAX - G.questions.length;
+
+  document.getElementById('mpKeeperName').textContent = data.keeperName;
+  document.getElementById('mpQLeft').textContent = left;
+  document.getElementById('mpProgFill').style.width = (left/MP.MAX*100)+'%';
+
+  const answering = data.phase === 'answer';
+  document.getElementById('mpAnsweringBanner').style.display = answering ? 'flex' : 'none';
+  document.getElementById('mpAnsweringText').textContent = answering
+    ? `${data.keeperName} is answering ${data.pendingAsker}'s question…`
+    : '';
+  document.getElementById('mpAskCard').style.display = answering ? 'none' : 'block';
+  document.getElementById('mpGuessBanner').style.display = answering ? 'none' : 'flex';
+  document.getElementById('mpTurnText').textContent = answering
+    ? `🤔 ${data.keeperName} is answering…`
+    : 'Ask a question or make a guess!';
+
+  renderQaList('mpQaList','mpQaEmpty', G.questions);
+  showScreen('mp-player');
+}
+
+function mpAskQuestion(){
+  const inp = document.getElementById('mpQInput');
+  const q = inp.value.trim();
+  if(!q) return;
+  inp.value='';
+  MP.hostConn.send({type:'ask', question:q, name:MP.myName});
+  // Show "answering" state locally
+  document.getElementById('mpAskCard').style.display='none';
+  document.getElementById('mpGuessBanner').style.display='none';
+  document.getElementById('mpAnsweringBanner').style.display='flex';
+  document.getElementById('mpAnsweringText').textContent='Waiting for keeper to answer…';
+}
+
+function mpAskVerbal(){
+  MP.hostConn.send({type:'verbal', name:MP.myName});
+  document.getElementById('mpAskCard').style.display='none';
+  document.getElementById('mpGuessBanner').style.display='none';
+  document.getElementById('mpAnsweringBanner').style.display='flex';
+  document.getElementById('mpAnsweringText').textContent='Waiting for keeper to answer…';
+}
+
+function mpShowResult(won, winner, obj, questionsLen){
+  const left = MP.MAX - (questionsLen||0);
+  document.getElementById('resFinalObj').textContent = obj;
+  document.getElementById('sUsed').textContent = questionsLen||0;
+  document.getElementById('sLeft').textContent = left;
+  document.getElementById('sPlayers').textContent = '--';
+  if(won){
+    document.getElementById('resIcon').textContent='🎉';
+    document.getElementById('resTitle').innerHTML=`<span style="color:var(--accent)">${winner}</span> got it!`;
+    document.getElementById('resSub').textContent=
+      `Correctly guessed after ${questionsLen||0} question${questionsLen!==1?'s':''}!`;
+    confetti();
+  } else {
+    document.getElementById('resIcon').textContent='😅';
+    document.getElementById('resTitle').textContent='Out of questions!';
+    document.getElementById('resSub').textContent='The mystery stumped everyone — Keeper wins!';
+  }
+  showScreen('result');
+}
+
+// ═══════════════════════════════════════════════════
+//  CLEANUP
+// ═══════════════════════════════════════════════════
+function mpCleanup(){
+  if(MP.peer){ try{ MP.peer.destroy(); }catch(e){} MP.peer=null; }
+  MP.mode=null; MP.conns=[]; MP.hostConn=null;
+  MP.myName=''; MP.roomCode=''; MP.lobbyPlayers=[];
+}
+
+// ═══════════════════════════════════════════════════
+//  CONFETTI + HELPERS
+// ═══════════════════════════════════════════════════
+function confetti(){
+  const w=document.getElementById('confettiWrap');
+  const cols=['#f59e0b','#8b5cf6','#10b981','#ef4444','#3b82f6','#ec4899','#06b6d4','#84cc16'];
+  for(let i=0;i<90;i++){
+    setTimeout(()=>{
+      const p=document.createElement('div'); p.className='cp';
+      const sz=(Math.random()*9+5)+'px';
+      p.style.cssText=`left:${Math.random()*100}%;
+        background:${cols[Math.floor(Math.random()*cols.length)]};
+        width:${sz};height:${sz};
+        border-radius:${Math.random()>.5?'50%':'3px'};
+        animation-duration:${(Math.random()*2.2+2).toFixed(2)}s;
+        animation-delay:${(Math.random()*.6).toFixed(2)}s;`;
+      w.appendChild(p);
+      setTimeout(()=>p.remove(),4500);
+    },i*25);
+  }
+}
+
+function randObj(){ return OBJECTS[Math.floor(Math.random()*OBJECTS.length)]; }
+
+function randCode(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I/O/0/1 confusion
+  let code='';
+  for(let i=0;i<6;i++) code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+
+// ═══════════════════════════════════════════════════
+//  KEYBOARD + BACKDROP CLICKS
+// ═══════════════════════════════════════════════════
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){ closeGuess(); closeExitOverlay(); }
+});
+['guessOverlay','exitOverlay'].forEach(id=>{
+  document.getElementById(id).addEventListener('click', function(e){
+    if(e.target===this){ closeGuess(); closeExitOverlay(); }
+  });
+});
+</script>
+</body>
+</html>
