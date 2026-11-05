@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         run: npm install
@@ -24,7 +24,7 @@ jobs:
       # Generate the ios/ Xcode project from the Capacitor config
       - name: Add iOS platform & sync
         run: |
-          npx cap add ios
+          npx cap add ios || true
           npx cap sync ios
 
       # ── Inject app icon into Xcode asset catalog ──
@@ -32,6 +32,10 @@ jobs:
         run: |
           ICONSET="ios/App/App/Assets.xcassets/AppIcon.appiconset"
           SRC="assets/AppIcon-1024.png"
+          if [ ! -f "$SRC" ]; then
+            echo "⚠️  No AppIcon-1024.png found in assets/ — skipping icon injection (Xcode will use default)"
+            exit 0
+          fi
           resize() { sips -z "$1" "$1" "$SRC" --out "$ICONSET/icon-${1}.png" > /dev/null; }
           resize 20; resize 29; resize 40; resize 58; resize 60; resize 76
           resize 80; resize 87; resize 120; resize 152; resize 167; resize 180
@@ -91,25 +95,29 @@ jobs:
           podfile_path = 'ios/App/Podfile'
           content = File.read(podfile_path)
 
-          signing_snippet = <<~SNIPPET
-              installer.pods_project.targets.each do |target|
-                target.build_configurations.each do |config|
-                  config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
-                  config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
-                  config.build_settings['EXPANDED_CODE_SIGN_IDENTITY'] = ''
-                end
-              end
-          SNIPPET
-
-          if content.match?(/^post_install/)
-            # Inject our snippet right after the opening line of the existing hook
-            content.sub!(/^(post_install do \|installer\|)/, "\\1\n#{signing_snippet}")
+          # Already patched — skip
+          if content.include?('CODE_SIGNING_ALLOWED')
+            puts "Podfile already patched, skipping"
           else
-            # No hook yet — append one
-            content += "\npost_install do |installer|\n#{signing_snippet}end\n"
-          end
+            signing_snippet = "  installer.pods_project.targets.each do |target|\n" \
+                              "    target.build_configurations.each do |config|\n" \
+                              "      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'\n" \
+                              "      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'\n" \
+                              "      config.build_settings['EXPANDED_CODE_SIGN_IDENTITY'] = ''\n" \
+                              "    end\n" \
+                              "  end\n"
 
-          File.write(podfile_path, content)
+            # Match any post_install block regardless of indentation/spacing
+            if content.match?(/post_install\s+do\s+\|installer\|/)
+              content.sub!(/post_install\s+do\s+\|installer\|/, "post_install do |installer|\n#{signing_snippet}")
+              puts "Injected into existing post_install block"
+            else
+              content += "\npost_install do |installer|\n#{signing_snippet}end\n"
+              puts "Added new post_install block"
+            end
+
+            File.write(podfile_path, content)
+          end
           RUBY_SCRIPT
           cd ios/App && pod install
 
@@ -125,7 +133,7 @@ jobs:
           security unlock-keychain -p "$KEYCHAIN_PASS" build.keychain
           security set-keychain-settings -t 3600 -u build.keychain
 
-          echo "$DIST_CERT_BASE64" | base64 --decode > dist_cert.p12
+          echo "$DIST_CERT_BASE64" | tr -d '\n\r ' | base64 -d > dist_cert.p12
           security import dist_cert.p12 \
             -k build.keychain \
             -P "$DIST_CERT_PASS" \
@@ -140,7 +148,7 @@ jobs:
           PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "$PROFILE_BASE64" | base64 --decode > \
+          echo "$PROFILE_BASE64" | tr -d '\n\r ' | base64 -d > \
             ~/Library/MobileDevice/Provisioning\ Profiles/e9235fb4-dff8-4875-a1d3-b52d6fde1f04.mobileprovision
 
       # ── Build & Archive ──
